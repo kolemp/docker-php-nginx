@@ -1,3 +1,5 @@
+{% set with_rsyslog = env('WITH_RSYSLOG') %}
+
 server {
 
     listen 80 default_server;
@@ -21,6 +23,11 @@ server {
         fastcgi_param HTTPS off;
     }
 
+{% if with_rsyslog == true %}
+    error_log syslog:server=localhost:514,tag=nginx;
+    access_log syslog:server=localhost:514,tag=nginx;
+{% else %}
     error_log /dev/stderr;
     access_log /dev/stdout;
+{% endif %}
 }

@@ -12,6 +12,21 @@ version: 2
     environment:
         PHP_VERSION: "7.2"
 
+.php70_rsyslog: &php70_rsyslog
+    environment:
+        PHP_VERSION: "7.0"
+        WITH_RSYSLOG: "true"
+
+.php71_rsyslog: &php71_rsyslog
+    environment:
+        PHP_VERSION: "7.1"
+        WITH_RSYSLOG: "true"
+
+.php72_rsyslog: &php72_rsyslog
+    environment:
+        PHP_VERSION: "7.2"
+        WITH_RSYSLOG: "true"
+
 .build_job_template: &build_job_template
         machine:
             enabled: true
@@ -20,10 +35,15 @@ version: 2
             - checkout
             - run:
                 command: |
-                    make build PHP_VERSION=$PHP_VERSION
+                    make build PHP_VERSION=$PHP_VERSION WITH_RSYSLOG=$WITH_RSYSLOG
                     docker login -u $DOCKER_USER -p $DOCKER_PASS
-                    docker push kolemp/docker-php-nginx:$PHP_VERSION
-                    if [ "$PHP_VERSION" == "7.2" ]; then
+                    if [ "$WITH_RSYSLOG" != "true" ]; then
+                        docker push kolemp/docker-php-nginx:$PHP_VERSION
+                    else
+                        docker push kolemp/docker-php-nginx:$PHP_VERSION-rsyslog
+                    fi
+
+                    if [ "$PHP_VERSION" == "7.2" ] && [ "$WITH_RSYSLOG" != "true" ]; then
                         docker tag kolemp/docker-php-nginx:$PHP_VERSION kolemp/docker-php-nginx:latest
                         docker push kolemp/docker-php-nginx:latest
                     fi
@@ -37,6 +57,15 @@ jobs:
         <<: *build_job_template
     build_72:
         <<: *php72
+        <<: *build_job_template
+    build_70_rsyslog:
+        <<: *php70_rsyslog
+        <<: *build_job_template
+    build_71_rsyslog:
+        <<: *php71_rsyslog
+        <<: *build_job_template
+    build_72_rsyslog:
+        <<: *php72_rsyslog
         <<: *build_job_template
 
 workflows:
@@ -55,3 +84,6 @@ workflows:
               filters:
                   branches:
                       only: master
+          - build_70_rsyslog
+          - build_71_rsyslog
+          - build_72_rsyslog

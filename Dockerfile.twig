@@ -1,4 +1,12 @@
 {% set php_version = env('PHP_VERSION') %}
+{% set with_rsyslog = env('WITH_RSYSLOG') %}
+
+{% if with_rsyslog == true %}
+    {% set php_logger = "syslog" %}
+{% else %}
+    {% set php_logger = "\/proc\/self\/fd\/2" %}
+{% endif %}
+
 FROM debian:stretch-slim
 
 ## Install s6
@@ -6,7 +14,7 @@ FROM debian:stretch-slim
 ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.4.0/s6-overlay-amd64.tar.gz /tmp/
 RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
 
-COPY services.d/ /etc/services.d/
+COPY services.d/nginx/ /etc/services.d/nginx/
 
 ## END
 
@@ -36,6 +44,14 @@ RUN apt-get update \
 {% endif %}
 {% endblock %}
 
+{% if with_rsyslog == "true" %}
+RUN apt-get update \
+    && apt-get install -y iproute2 rsyslog \
+    && rm -rf /var/lib/apt/lists/*
+COPY rsyslog.conf /etc/rsyslog.conf
+COPY services.d/rsyslog/ /etc/services.d/rsyslog/
+{% endif %}
+
 RUN apt-get update && \
     apt-get install -y --force-yes php${PHP_VERSION} php${PHP_VERSION}-soap php${PHP_VERSION}-fpm  \
         php${PHP_VERSION}-mysql php${PHP_VERSION}-apcu php${PHP_VERSION}-gd php${PHP_VERSION}-imagick php${PHP_VERSION}-curl php${PHP_VERSION}-common \
@@ -49,8 +65,8 @@ RUN apt-get update && apt-get install -y openssl git && apt-get purge -y --auto-
 RUN \
   sed -i "s/^memory_limit = .*/memory_limit = \"\${PHP_CLI_MEMORY_LIMIT}\"/g" "/etc/php/$PHP_VERSION/cli/php.ini"; \
   \
-  sed -i "s/^;?access\.log = .*/access.log = \/proc\/self\/fd\/2/g" "/etc/php/$PHP_VERSION/fpm/pool.d/www.conf"; \
-  sed -i "s/^;?error\.log = .*/error.log = \/proc\/self\/fd\/2/g" "/etc/php/$PHP_VERSION/fpm/php-fpm.conf"; \
+  sed -i "s/^;?access\.log = .*/access.log = {{ php_logger }}/g" "/etc/php/$PHP_VERSION/fpm/pool.d/www.conf"; \
+  sed -i "s/^;?error\.log = .*/error.log = {{ php_logger }}/g" "/etc/php/$PHP_VERSION/fpm/php-fpm.conf"; \
   \
   sed -i "s/^user = .*/user = \"\${PHP_FPM_USER}\"/g" "/etc/php/$PHP_VERSION/fpm/pool.d/www.conf"; \
   sed -i "s/^group = .*/group = \"\${PHP_FPM_GROUP}\"/g" "/etc/php/$PHP_VERSION/fpm/pool.d/www.conf"; \
