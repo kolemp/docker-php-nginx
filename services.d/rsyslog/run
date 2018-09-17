@@ -1,0 +1,4 @@
+#!/bin/sh
+GATEWAY_IP=`/sbin/ip route|awk '/default/ { print $3 }'`
+sed -i "s/{{gateway_ip}}/$GATEWAY_IP/g" "/etc/rsyslog.conf";
+rsyslogd -n
