@@ -12,6 +12,10 @@ version: 2
     environment:
         PHP_VERSION: "7.2"
 
+.php73: &php73
+    environment:
+        PHP_VERSION: "7.3"
+
 .build_job_template: &build_job_template
         machine:
             enabled: true
@@ -23,7 +27,7 @@ version: 2
                     make build PHP_VERSION=$PHP_VERSION
                     docker login -u $DOCKER_USER -p $DOCKER_PASS
                     docker push kolemp/docker-php-nginx:$PHP_VERSION
-                    if [ "$PHP_VERSION" == "7.2" ]; then
+                    if [ "$PHP_VERSION" == "7.3" ]; then
                         docker tag kolemp/docker-php-nginx:$PHP_VERSION kolemp/docker-php-nginx:latest
                         docker push kolemp/docker-php-nginx:latest
                     fi
@@ -37,6 +41,9 @@ jobs:
         <<: *build_job_template
     build_72:
         <<: *php72
+        <<: *build_job_template
+    build_73:
+        <<: *php73
         <<: *build_job_template
 
 workflows:
@@ -52,6 +59,10 @@ workflows:
                   branches:
                       only: master
           - build_72:
+              filters:
+                  branches:
+                      only: master
+          - build_73:
               filters:
                   branches:
                       only: master
