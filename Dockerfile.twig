@@ -21,6 +21,10 @@ ADD application.conf /etc/nginx/sites-available/
 RUN ln -s /etc/nginx/sites-available/application.conf /etc/nginx/sites-enabled/application
 RUN rm /etc/nginx/sites-enabled/default
 
+# forward request and error logs to docker log collector
+RUN ln -sf /dev/stdout /var/log/nginx/acc   ess.log \
+&& ln -sf /dev/stderr /var/log/nginx/error.log
+
 RUN usermod -u 1000 www-data
 
 ## END
@@ -49,8 +53,8 @@ RUN apt-get update && apt-get install -y openssl git && apt-get purge -y --auto-
 RUN \
   sed -i "s/^memory_limit = .*/memory_limit = \"\${PHP_CLI_MEMORY_LIMIT}\"/g" "/etc/php/$PHP_VERSION/cli/php.ini"; \
   \
-  sed -i "s/^;?access\.log = .*/access.log = \/proc\/self\/fd\/2/g" "/etc/php/$PHP_VERSION/fpm/pool.d/www.conf"; \
-  sed -i "s/^;?error_log = .*/error_log = \/proc\/self\/fd\/2/g" "/etc/php/$PHP_VERSION/fpm/php-fpm.conf"; \
+  sed -i "s/^;\?access\.log = .*/access.log = \/proc\/self\/fd\/2/g" "/etc/php/$PHP_VERSION/fpm/pool.d/www.conf"; \
+  sed -i "s/^;\?error_log = .*/error_log = \/proc\/self\/fd\/2/g" "/etc/php/$PHP_VERSION/fpm/php-fpm.conf"; \
   sed -i "s/^;\?catch_workers_output = .*/catch_workers_output = yes/g" "/etc/php/$PHP_VERSION/fpm/pool.d/www.conf"; \
   \
   sed -i "s/^memory_limit = .*/memory_limit = \"\${PHP_FPM_MEMORY_LIMIT}\"/g" "/etc/php/$PHP_VERSION/fpm/php.ini"; \
