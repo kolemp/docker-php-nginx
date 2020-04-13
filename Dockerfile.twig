@@ -22,7 +22,7 @@ RUN ln -s /etc/nginx/sites-available/application.conf /etc/nginx/sites-enabled/a
 RUN rm /etc/nginx/sites-enabled/default
 
 # forward request and error logs to docker log collector
-RUN ln -sf /dev/stdout /var/log/nginx/acc   ess.log \
+RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 && ln -sf /dev/stderr /var/log/nginx/error.log
 
 RUN usermod -u 1000 www-data
