@@ -1,5 +1,5 @@
 SHELL = /bin/bash
-TAG = "kolemp/docker-php-nginx:$(PHP_VERSION)"
+TAG = "kolemp/docker-php-nginx:bullseye-$(PHP_VERSION)"
 
 build:
 	@if [ "$(PHP_VERSION)" == "" ]; then echo "PHP_VERSION is required"; exit 1; fi;

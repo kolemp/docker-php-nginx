@@ -1,1 +1,3 @@
 /Dockerfile
+composer-setup.php
+composer.phar

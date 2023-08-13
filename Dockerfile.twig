@@ -1,5 +1,5 @@
 {% set php_version = env('PHP_VERSION') %}
-FROM debian:stretch-slim
+FROM debian:bullseye
 
 ## Install s6
 
@@ -42,8 +42,14 @@ RUN apt-get update && \
         php${PHP_VERSION}-intl php${PHP_VERSION}-memcached php${PHP_VERSION}-dom php${PHP_VERSION}-bcmath php${PHP_VERSION}-zip \
         php${PHP_VERSION}-mbstring php${PHP_VERSION}-ldap php${PHP_VERSION}-gmp php${PHP_VERSION}-xdebug gnupg && \
         rm -rf /var/lib/apt/lists/* && \
-        mkdir -p /run/php/ && \
-    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
+        mkdir -p /run/php/
+
+ADD composer-install.sh /opt/
+RUN chmod +x /opt/composer-install.sh /opt/ \
+    && ./opt/composer-install.sh \
+    && mv composer.phar /usr/local/bin/composer \
+    && rm /opt/composer-install.sh 
+
 RUN apt-get update && apt-get install -y openssl git && apt-get purge -y --auto-remove
 
 RUN \
